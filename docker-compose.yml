@@ -1,0 +1,66 @@
+version: '3'
+
+networks:
+    backend:
+        driver: bridge
+
+services:
+    gateway:
+        build:
+            context: ./gateway
+            dockerfile: Dockerfile
+        container_name: gateway
+        restart: unless-stopped
+        env_file:
+            - ./.env
+        ports:
+            - '${GATEWAY_PORT}:${GATEWAY_PORT}'
+        networks:
+            - backend
+        depends_on:
+            - auth
+            - event
+    auth:
+        build:
+            context: ./auth
+            dockerfile: Dockerfile
+        container_name: auth
+        restart: unless-stopped
+        env_file:
+            - ./.env
+        ports:
+            - '${AUTH_PORT}:${AUTH_PORT}'
+        networks:
+            - backend
+        depends_on:
+            - mongo
+    event:
+        build:
+            context: ./event
+            dockerfile: Dockerfile
+        container_name: event
+        restart: unless-stopped
+        env_file:
+            - ./.env
+        ports:
+            - '${EVENT_PORT}:${EVENT_PORT}'
+        networks:
+            - backend
+        depends_on:
+            - mongo
+    mongo:
+        image: mongo:latest
+        container_name: mongo
+        restart: unless-stopped
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+        volumes:
+            - mongo_data:/data/db
+        ports:
+            - '27017:27017'
+        networks:
+            - backend
+
+volumes:
+    mongo_data:
