@@ -1,12 +1,12 @@
 export default () => ({
-  port: parseInt(process.env.GATEWAY_PORT ?? '3000', 10),
+  env: process.env.NODE_ENV,
+  port: parseInt(process.env.AUTH_PORT ?? '3001', 10),
   jwt: {
     secret: process.env.JWT_SECRET,
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   },
-  services: {
-    auth: process.env.GATEWAY_AUTH_URL,
-    event: process.env.GATEWAY_EVENT_URL,
+  mongo: {
+    uri: process.env.MONGO_AUTH_URI,
   },
 });
