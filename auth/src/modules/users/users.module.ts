@@ -3,8 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './schemas/user.schema';
-import { OwnershipGuard } from './guards/ownership.guard';
-import { APP_GUARD } from '@nestjs/core';
+import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
 
 /**
  * Users 모듈
@@ -16,7 +15,10 @@ import { APP_GUARD } from '@nestjs/core';
  */
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: RefreshToken.name, schema: RefreshTokenSchema },
+    ]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

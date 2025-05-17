@@ -8,8 +8,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProxyModule } from './proxy/proxy.module';
 import { JwtAuthGuard } from './modules/jwt/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
-import { AuthController } from './routes/auth.controller';
-
+import { AuthAuthController } from './routes/auth/auth-auth.controller';
+import { AuthUserController } from './routes/auth/auth-user.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,7 +20,7 @@ import { AuthController } from './routes/auth.controller';
     AuthModule,
     ProxyModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthAuthController, AuthUserController],
   providers: [
     AppService,
     {

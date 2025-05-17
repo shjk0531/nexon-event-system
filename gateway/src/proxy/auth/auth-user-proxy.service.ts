@@ -2,13 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { ProxyRequestService } from './proxy-request.service';
+import { ProxyRequestService } from '../proxy-request.service';
 import { User } from './proxy-user.interface';
 
 @Injectable()
-export class AuthProxyService {
+export class AuthUserProxyService {
   private readonly baseUrl: string;
-  private readonly logger = new Logger(AuthProxyService.name);
 
   constructor(
     private readonly httpService: HttpService,
@@ -18,20 +17,10 @@ export class AuthProxyService {
     this.baseUrl = configService.getOrThrow<string>('services.auth');
   }
 
-  // auth test
-  async getHello() {
-    this.logger.log('AuthProxyService: getHello');
-    const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}`),
-    );
-    return response.data;
-  }
 
   // user module
   // user 생성
   async createUser(data: unknown) {
-    this.logger.log('AuthProxyService: createUser', data);
-    this.logger.log('AuthProxyService: url', `${this.baseUrl}/users/user`);
     const response = await firstValueFrom(
       this.httpService.post(`${this.baseUrl}/users/user`, data),
     );
@@ -62,6 +51,14 @@ export class AuthProxyService {
     return response.data;
   }
 
+  // user 조회
+  async getUser(id: string) {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/users/user/${id}`),
+    );
+    return response.data;
+  }
+
   // user 업데이트
   async updateUser(dto: unknown) {
     return this.proxyRequestService.request<unknown>(
@@ -82,14 +79,4 @@ export class AuthProxyService {
     );
   }
 
-  // auth module
-  // 로그인
-  async login(data: unknown) {
-    const response = await firstValueFrom(
-      this.httpService.post(`${this.baseUrl}/auth/login`, data),
-    );
-    return response.data;
-  }
-
-  // TODO: 추가 API 호출 정의
 }

@@ -3,73 +3,82 @@ import {
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'modules/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { Role } from '../../common/constants/roles.enum';
-import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { JwtUtil } from '../../utils/jwt.util.service';
+import { HashUtil } from 'utils/hash.util.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly jwtUtil: JwtUtil,
+    private readonly hashUtil: HashUtil,
   ) {}
 
-  async validateUser(email: string, pass: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) return null;
-    const match = await bcrypt.compare(pass, user.password);
-    if (match) {
-      const { password, ...result } = user.toObject();
-      return result;
-    }
-    return null;
-  }
-
   async login(dto: LoginDto) {
-    const user = await this.validateUser(dto.email, dto.password);
+    const user = await this.usersService.validateUser(dto.email, dto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload: JwtPayload = {
-      sub: user._id.toString(),
-      role: [user.role],
-    };
-
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
-      }),
-      this.jwtService.signAsync(payload, {
-        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
-      }),
-    ]);
-
-    // Refresh token을 사용자 정보에 저장
-    await this.usersService.updateRefreshToken(user._id, refreshToken);
+    const accessToken = await this.jwtUtil.signAccessToken(
+      user.id,
+      user.role,
+    );
+    const refreshToken = await this.jwtUtil.signRefreshToken(
+      user.id,
+    );
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
   }
-
-  async register(dto: RegisterDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Email already exists');
+  
+  /**
+   * 토큰 회전
+   * @param beforeRefreshToken - 이전 refresh token
+   * @returns { access_token: string, refresh_token: string }
+   */
+  async rotateTokens(beforeRefreshToken: string): Promise<{
+    access_token: string;
+    refresh_token: string;
+  }> {
+    if (!beforeRefreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
     }
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = await this.usersService.create({
-      ...dto,
-      password: hashed,
-    });
-    return user;
+
+    const decoded = await this.jwtUtil.verify(beforeRefreshToken);
+    const user = await this.usersService.findById(decoded.sub);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+     const tokenDoc = await this.usersService.findRefreshToken(user.id);
+
+     if (
+      !tokenDoc || 
+      !(await this.hashUtil.compare(tokenDoc.token, beforeRefreshToken))) {
+      throw new UnauthorizedException('Invalid refresh token');
+     }
+
+     await this.usersService.useRefreshToken(user.id, tokenDoc.token);
+
+
+     const accessToken = await this.jwtUtil.signAccessToken(
+      user.id,
+      user.role,
+     );
+
+     const refreshToken = await this.usersService.createRefreshToken(user.id);
+
+     return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+     };
+     
   }
 }
