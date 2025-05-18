@@ -11,7 +11,6 @@ async function bootstrap() {
   const eventServiceUrl = config.getOrThrow<string>('services.event');
 
   app.setGlobalPrefix('api');
-  app.setGlobalPrefix('api');
   app.use(
     '/api/auth',
     createProxyMiddleware({
