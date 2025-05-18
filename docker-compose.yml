@@ -1,5 +1,3 @@
-version: '3'
-
 networks:
     backend:
         driver: bridge
@@ -33,7 +31,7 @@ services:
         networks:
             - backend
         depends_on:
-            - mongo
+            - mongo-auth
     event:
         build:
             context: ./event
@@ -47,20 +45,35 @@ services:
         networks:
             - backend
         depends_on:
-            - mongo
-    mongo:
+            - mongo-event
+    mongo-auth:
         image: mongo:latest
-        container_name: mongo
+        container_name: mongo-auth
         restart: unless-stopped
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+            - MONGO_INITDB_DATABASE=${MONGO_AUTH_NAME}
         volumes:
-            - mongo_data:/data/db
+            - mongo_auth_data:/data/db
         ports:
-            - '27017:27017'
+            - '${MONGO_AUTH_PORT}:27017'
         networks:
             - backend
-
+    mongo-event:
+        image: mongo:latest
+        container_name: mongo-event
+        restart: unless-stopped
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+            - MONGO_INITDB_DATABASE=${MONGO_EVENT_NAME}
+        volumes:
+            - mongo_event_data:/data/db
+        ports:
+            - '${MONGO_EVENT_PORT}:27017'
+        networks:
+            - backend
 volumes:
-    mongo_data:
+    mongo_auth_data:
+    mongo_event_data:
