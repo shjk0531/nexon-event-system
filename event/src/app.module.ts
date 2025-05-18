@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+import configuration from 'config/configuration';
+import { validationSchema } from 'config/validation';
+import { AttendanceModule } from 'modules/attendance/attendance.module';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      validationSchema,
+    }),
+    MongooseModule.forRoot(process.env.MONGO_EVENT_URI ?? ''),
+    AttendanceModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

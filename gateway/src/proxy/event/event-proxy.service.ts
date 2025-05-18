@@ -13,6 +13,14 @@ export class EventProxyService {
     this.baseUrl = configService.getOrThrow<string>('services.event');
   }
 
+  async test() {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}`),
+    );
+
+    return response.data;
+  }
+
   async requestReward(userId: string, eventId: string) {
     const response = await firstValueFrom(
       this.httpService.post(`${this.baseUrl}/events/${eventId}/rewards`, {
