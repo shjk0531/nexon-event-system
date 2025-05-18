@@ -21,7 +21,7 @@ export class AuthAuthProxyService {
     const response = await firstValueFrom(
       this.httpService.post(`${this.baseUrl}/auth/login`, data),
     );
-    return response.data;
+    return response;
   }
 
   // TODO: 추가 API 호출 정의

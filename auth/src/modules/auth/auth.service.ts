@@ -1,12 +1,9 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common';
 import { UsersService } from 'modules/users/users.service';
-import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import { JwtUtil } from '../../utils/jwt.util.service';
 import { HashUtil } from 'utils/hash.util.service';
 
@@ -24,13 +21,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const userId = (user as any)._id.toString();
+
     const accessToken = await this.jwtUtil.signAccessToken(
-      user.id,
+      userId,
       user.role,
     );
-    const refreshToken = await this.jwtUtil.signRefreshToken(
-      user.id,
-    );
+    const refreshToken = await this.usersService.createRefreshToken(userId);
 
     return {
       access_token: accessToken,
