@@ -204,5 +204,13 @@ export class UsersService {
     }
     return this.refreshTokenModel.findOne({ userId, jti: payload.jti, isUsed: false }).exec();
   }
+
+  async getUserById(userId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+    return user;
+  }
 }
 

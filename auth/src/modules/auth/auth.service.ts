@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtUtil } from '../../utils/jwt.util.service';
 import { HashUtil } from 'utils/hash.util.service';
 import { Role } from 'common/constants/role.enum';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -41,7 +42,7 @@ export class AuthService {
    * @param beforeRefreshToken - 이전 refresh token
    * @returns { access_token: string, refresh_token: string }
    */
-  async rotateTokens(userId: string, userRole: Role, beforeRefreshToken: string): Promise<{
+  async rotateTokens(userId: string, beforeRefreshToken: string): Promise<{
     access_token: string;
     refresh_token: string;
   }> {
@@ -56,6 +57,8 @@ export class AuthService {
 
      await this.usersService.useRefreshToken(userId, beforeRefreshToken);
 
+    const user = await this.usersService.getUserById(userId);
+    const userRole = user.role;
 
      const accessToken = await this.jwtUtil.signAccessToken(
       userId,

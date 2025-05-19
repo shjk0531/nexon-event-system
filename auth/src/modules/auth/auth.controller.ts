@@ -72,7 +72,6 @@ export class AuthController {
     const { access_token, refresh_token } =
       await this.authService.rotateTokens(
         payload.sub,
-        payload.role as Role,
         rt,
       );
 

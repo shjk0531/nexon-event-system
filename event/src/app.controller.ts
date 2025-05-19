@@ -21,4 +21,24 @@ export class AppController {
     this.logger.log(user);
     return 'test';
   }
+
+  @Get('test/user')
+  testUser() {
+    return 'test user';
+  }
+
+  @Get('test/operator')
+  testOperator() {
+    return 'test operator';
+  }
+
+  @Get('test/auditor')
+  testAuditor() {
+    return 'test auditor';
+  }
+
+  @Get('test/admin')
+  testAdmin() {
+    return 'test admin';
+  }
 }

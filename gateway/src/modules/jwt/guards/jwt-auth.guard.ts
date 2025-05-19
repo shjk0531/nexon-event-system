@@ -78,6 +78,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       this.logger.log('Access token refreshed via gateway');
     }
 
+    await super.canActivate(context) as boolean;
     return true;
   }
 }

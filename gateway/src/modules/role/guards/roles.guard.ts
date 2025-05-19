@@ -20,12 +20,12 @@ export class RolesGuard implements CanActivate {
     const request = context
       .switchToHttp()
       .getRequest<{ user: { role: Role } }>();
-    const user = request.user;
+    const user = request.user as { role: Role };
     if (!user) {
       throw new UnauthorizedException('Not authenticated');
     }
 
-    if (!(requiredRoles.includes(user.role))) {
+    if (!requiredRoles.some(role => role === user.role)) {
       throw new UnauthorizedException('Not authorized');
     }
 
