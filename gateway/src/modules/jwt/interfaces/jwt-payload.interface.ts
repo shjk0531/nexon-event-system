@@ -1,4 +1,6 @@
+import { Role } from 'modules/role/constants/role.enum';
+
 export interface JwtPayload {
   sub: string;
-  roles: string[];
+  role?: Role;
 }

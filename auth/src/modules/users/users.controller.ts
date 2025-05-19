@@ -8,12 +8,10 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Roles } from 'common/decorators/roles.decorator';
-import { Role } from 'common/constants/roles.enum';
+import { Role } from 'common/constants/role.enum';
 import { CreateUserResponseDto } from './dto/create-user-dto';
 import { User } from './schemas/user.schema';
-import { CurrentUser } from 'common/decorators/user.decorator';
-import { Public } from 'common/decorators/public.decorator';
+import { CurrentUser } from 'common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -24,7 +22,6 @@ export class UsersController {
    * @param createUserDto - 사용자 생성에 필요한 데이터
    * @returns body: { email: string; password: string; role: user }
    */
-  @Public()
   @Post('user')
   createUser(
     @Body() createUserDto: { email: string; password: string },
@@ -43,7 +40,6 @@ export class UsersController {
    *
    * TODO: 생성자 권한 추가가
    */
-  @Public()
   @Post('operator')
   createOperator(
     @Body() createUserDto: { email: string; password: string },
@@ -62,7 +58,6 @@ export class UsersController {
    *
    * TODO: 생성자 권한 추가가
    */
-  @Public()
   @Post('auditor')
   createAuditor(
     @Body() createUserDto: { email: string; password: string },
@@ -81,7 +76,6 @@ export class UsersController {
    *
    * TODO: 생성자 권한 추가가
    */
-  @Public()
   @Post('admin')
   createAdmin(
     @Body() createUserDto: { email: string; password: string },
@@ -101,7 +95,6 @@ export class UsersController {
    * TODO: 개발 환경에서만 사용
    */
   @Get('user')
-  @Roles(Role.ADMIN)
   findAll(): Promise<CreateUserResponseDto[]> {
     return this.usersService.findAll();
   }
@@ -113,7 +106,6 @@ export class UsersController {
    * @requires ADMIN 권한 또는 본인 정보 조회
    */
   @Get('user/:id')
-  @Roles(Role.ADMIN)
   findOne(@Param('id') id: string): Promise<CreateUserResponseDto> {
     return this.usersService.findById(id);
   }
@@ -126,14 +118,11 @@ export class UsersController {
    * @requires ADMIN 권한 또는 본인 정보 수정
    */
   @Patch('user')
-  @Roles(Role.ADMIN)
   update(
-    @CurrentUser('userId') userId: string,
-    @CurrentUser('roles') roles: string[],
+    @CurrentUser() user: CurrentUser,
     @Body() updateUserDto: Partial<User>,
   ): Promise<CreateUserResponseDto> {
-    console.log(userId, roles);
-    return this.usersService.update(userId, updateUserDto);
+    return this.usersService.update(user.id, updateUserDto);
   }
 
   /**
@@ -143,12 +132,9 @@ export class UsersController {
    * @requires ADMIN 권한
    */
   @Delete('user')
-  @Roles(Role.ADMIN)
   remove(
-    @CurrentUser('userId') userId: string,
-    @CurrentUser('roles') roles: string[],
+    @CurrentUser() user: CurrentUser,
   ): Promise<CreateUserResponseDto> {
-    console.log(userId, roles);
-    return this.usersService.remove(userId);
+    return this.usersService.remove(user.id);
   }
 }

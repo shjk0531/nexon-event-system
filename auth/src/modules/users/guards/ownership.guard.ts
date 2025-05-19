@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Role } from 'common/constants/roles.enum';
+import { Role } from 'common/constants/role.enum';
 import { Observable } from 'rxjs';
 
 @Injectable()
