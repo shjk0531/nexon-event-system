@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import configuration from 'config/configuration';
 import { validationSchema } from 'config/validation';
-import { AttendanceModule } from 'modules/attendance/attendance.module';
+import { EventModule } from './modules/event/event.module';
 import { UserFromHeaderMiddleware } from 'common/middleware/user-from-header.middleware';
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { UserFromHeaderMiddleware } from 'common/middleware/user-from-header.mid
       validationSchema,
     }),
     MongooseModule.forRoot(process.env.MONGO_EVENT_URI ?? ''),
-    AttendanceModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],

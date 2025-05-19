@@ -25,6 +25,8 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('Not authenticated');
     }
 
+    console.log(user.role, requiredRoles);
+    console.log(requiredRoles.some(role => role === user.role));
     if (!requiredRoles.some(role => role === user.role)) {
       throw new UnauthorizedException('Not authorized');
     }
