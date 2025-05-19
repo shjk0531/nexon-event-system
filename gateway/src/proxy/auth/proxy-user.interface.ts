@@ -1,6 +1,6 @@
-import { Role } from 'common/constants/role.enum';
+import { Role } from 'modules/role/constants/role.enum';
 
 export interface User {
   id: string;
-  roles: Role[];
+  role: Role;
 }

@@ -32,8 +32,8 @@ export class ProxyRequestService {
     const headers: Record<string, string> = {};
 
     if (user) {
-      headers['X-User-Id'] = user.id;
-      headers['X-User-Roles'] = user.roles.join(',');
+      headers['x-user-id'] = user.id;
+      headers['x-user-role'] = user.role;
     }
 
     const response = await firstValueFrom(

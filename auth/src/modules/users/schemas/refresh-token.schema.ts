@@ -7,10 +7,10 @@ import { Document } from 'mongoose';
 })
 export class RefreshToken extends Document {
   @Prop({ required: true })
-  token: string;
+  userId: string;
 
   @Prop({ required: true })
-  userId: string;
+  jti: string;
 
   @Prop({ required: true })
   expiresAt: Date;

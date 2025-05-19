@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { Public } from "common/decorators/public.decorator";
+import { Public } from "modules/jwt/decorators/public.decorator";
 import { JwtAuthGuard } from "modules/jwt/guards/jwt-auth.guard";
 import { AuthUserProxyService } from "proxy/auth/auth-user-proxy.service";
 

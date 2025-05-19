@@ -6,7 +6,7 @@ import { UsersService } from 'modules/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtUtil } from '../../utils/jwt.util.service';
 import { HashUtil } from 'utils/hash.util.service';
-
+import { Role } from 'common/constants/role.enum';
 @Injectable()
 export class AuthService {
   constructor(
@@ -37,10 +37,11 @@ export class AuthService {
   
   /**
    * 토큰 회전
+   * @param userId - 사용자 ID
    * @param beforeRefreshToken - 이전 refresh token
    * @returns { access_token: string, refresh_token: string }
    */
-  async rotateTokens(beforeRefreshToken: string): Promise<{
+  async rotateTokens(userId: string, userRole: Role, beforeRefreshToken: string): Promise<{
     access_token: string;
     refresh_token: string;
   }> {
@@ -48,34 +49,24 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is required');
     }
 
-    const decoded = await this.jwtUtil.verify(beforeRefreshToken);
-    const user = await this.usersService.findById(decoded.sub);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-    
-     const tokenDoc = await this.usersService.findRefreshToken(user.id);
-
-     if (
-      !tokenDoc || 
-      !(await this.hashUtil.compare(tokenDoc.token, beforeRefreshToken))) {
+    const refreshTokenDoc = await this.usersService.verifyRefreshToken(userId, beforeRefreshToken);
+    if (!refreshTokenDoc) {
       throw new UnauthorizedException('Invalid refresh token');
-     }
+    }
 
-     await this.usersService.useRefreshToken(user.id, tokenDoc.token);
+     await this.usersService.useRefreshToken(userId, beforeRefreshToken);
 
 
      const accessToken = await this.jwtUtil.signAccessToken(
-      user.id,
-      user.role,
+      userId,
+      userRole,
      );
 
-     const refreshToken = await this.usersService.createRefreshToken(user.id);
+     const refreshToken = await this.usersService.createRefreshToken(userId);
 
      return {
       access_token: accessToken,
       refresh_token: refreshToken,
      };
-     
   }
 }

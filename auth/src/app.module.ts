@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import configuration from 'config/configuration';
 import { validationSchema } from 'config/validation';
@@ -6,7 +6,7 @@ import { AuthModule } from 'modules/auth/auth.module';
 import { UsersModule } from 'modules/users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UtilModule } from 'utils/Utile.module';
-
+import { UserFromHeaderMiddleware } from 'common/middleware/user-from-header.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,4 +22,8 @@ import { UtilModule } from 'utils/Utile.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(UserFromHeaderMiddleware).forRoutes('*');
+  }
+}

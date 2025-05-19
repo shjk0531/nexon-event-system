@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -154,16 +155,18 @@ export class UsersService {
    * @returns { userId: string, token: string, isUsed: boolean, expiresAt: Date }
    */
   async createRefreshToken(userId: string): Promise<string> {
-    const refreshToken = await this.jwtUtil.signRefreshToken(userId);
-    const hashed = await this.hashUtil.hash(refreshToken);
+    const {token, jti} = await this.jwtUtil.signRefreshToken(userId);
+
+    const decoded = this.jwtUtil.decode(token) as unknown as { exp: number };
+    const expiresDate = new Date(decoded.exp * 1000);
 
    await this.refreshTokenModel.create({
       userId: userId,
-      token: hashed,
-      expiresAt: new Date(Date.now() + this.configService.getOrThrow<number>('jwt.refreshExpiresIn')),
+      jti: jti,
+      expiresAt: expiresDate,
     });
 
-    return refreshToken;
+    return token;
   }
 
   /**
@@ -176,12 +179,30 @@ export class UsersService {
   }
 
   /**
-   * 기존 refresh token을 사용 처리
+   * 기존 refresh token을 사용 처리 
    * @param userId - 사용자 ID
-   * @param token - 사용할 refresh token
+   * @param jti - 사용할 refresh token의 jti
    */
-  async useRefreshToken(userId: string, token: string): Promise<void> {
-    await this.refreshTokenModel.findOneAndUpdate({ userId, token }, { isUsed: true }).exec();
+  async useRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    const payload = await this.jwtUtil.verify(refreshToken);
+    if (payload.sub !== userId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    await this.refreshTokenModel.findOneAndUpdate({ userId, jti: payload.jti, isUsed: false }, { isUsed: true }).exec();
+  }
+
+  /**
+   * 사용자의 refresh token 검증
+   * @param userId - 사용자 ID
+   * @param refreshToken - 사용자의 refresh token
+   * @returns { userId: string, token: string, isUsed: boolean, expiresAt: Date }
+   */
+  async verifyRefreshToken(userId: string, refreshToken: string): Promise<RefreshToken | null> {
+    const payload = await this.jwtUtil.verify(refreshToken);
+    if (payload.sub !== userId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    return this.refreshTokenModel.findOne({ userId, jti: payload.jti, isUsed: false }).exec();
   }
 }
 

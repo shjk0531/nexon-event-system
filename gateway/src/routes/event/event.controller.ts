@@ -1,16 +1,21 @@
-import { Controller, Post } from "@nestjs/common";
+import { Controller, Post, Req, Res } from "@nestjs/common";
 import { Get } from "@nestjs/common";
-import { EventProxyService } from "proxy/event/event-proxy.service";
-import { Public } from "common/decorators/public.decorator";
+import { ProxyService } from "proxy/proxy.service";
+import { Request, Response } from "express";
 
 @Controller('event')
 export class EventController {
-  constructor(private readonly eventProxyService: EventProxyService) {}
+  constructor(private readonly proxyService: ProxyService) {}
 
-  @Public()
   @Get('test')
-  async test() {
-    return this.eventProxyService.test();
+  async test(@Req() request: Request, @Res({ passthrough: true }) res: Response) {
+    const upstream = await this.proxyService.forward(
+      'event',
+      request,
+      res,
+    );
+
+    return upstream.data;
   }
 
 }
