@@ -8,6 +8,7 @@ import { SpendThresholdStrategy } from './strategies/conditions/spend-threshold.
 import { PaybackStrategy } from './strategies/conditions/payback.strategy';
 import { FixedItemRewardStrategy } from './strategies/rewards/fixed-item-reward.strategy';
 import { CashbackRewardStrategy } from './strategies/rewards/cashback-reward.strategy';
+import { PointRewardStrategy } from './strategies/rewards/point-reward.strategy';
 
 export const conditionStrategyProviders: Provider[] = [
   {
@@ -40,6 +41,10 @@ export const rewardStrategyProviders: Provider[] = [
   {
     provide: `RewardStrategy.${RewardType.CASHBACK}`,
     useClass: CashbackRewardStrategy,
+  },
+  {
+    provide: `RewardStrategy.${RewardType.POINT}`,
+    useClass: PointRewardStrategy,
   },
 ];
 

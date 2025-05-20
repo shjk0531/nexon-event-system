@@ -17,6 +17,13 @@ export class EventController {
     return this.eventService.getCalendar(userId, month);
   }
 
+  @Get('referrerId')
+  async getReferrerId(
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.eventService.getReferrerId(user.id);
+  }
+
   @Post()
   async create(@Body() createEventDto: CreateEventDto) {
     return this.eventService.create(createEventDto);

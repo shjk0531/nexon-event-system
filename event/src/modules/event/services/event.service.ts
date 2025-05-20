@@ -8,13 +8,14 @@ import { CreateEventDto } from '../dtos/create-event.dto';
 import { UpdateEventDto } from '../dtos/update-event.dto';
 import { CreateRewardDto } from '../dtos/create-reward.dto';
 import { EventType } from '../constants/event-type.constant';
-
+import { ReferralCodeService } from './referral-code.service';
 @Injectable()
 export class EventService {
   constructor(
     @InjectModel('Event') private readonly eventModel: Model<EventDocument>,
     @InjectModel('Reward') private readonly rewardModel: Model<RewardDocument>,
     @InjectModel('Claim') private readonly claimModel: Model<ClaimDocument>,
+    private readonly referralCodeService: ReferralCodeService,
   ) {}
 
   async create(createEventDto: CreateEventDto): Promise<EventDocument> {
@@ -106,5 +107,10 @@ export class EventService {
         return { date: dateStr, claimed: claimedDates.has(dateStr) };
       }),
     };
+  }
+
+  async getReferrerId(userId: string): Promise<string> {
+    const refferrerId = this.referralCodeService.generate(userId);
+    return refferrerId;
   }
 }

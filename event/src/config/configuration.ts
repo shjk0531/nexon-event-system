@@ -4,4 +4,8 @@ export default () => ({
   mongo: {
     uri: process.env.MONGO_EVENT_URI,
   },
+  jwt: {
+    secret: process.env.REFERRAL_JWT_SECRET,
+    expiresIn: process.env.REFERRAL_JWT_EXPIRES_IN,
+  },
 });

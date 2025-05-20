@@ -6,5 +6,6 @@ export interface RewardStrategy {
     userId: string,
     event: EventDocument,
     reward: RewardDocument,
+    payload?: Record<string, any>
   ): Promise<void>;
 }

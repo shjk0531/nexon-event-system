@@ -19,7 +19,11 @@ export class ClaimService {
   /**
    * 사용자의 보상 요청을 생성하고, 조건검증 → 보상처리(또는 거부) 순으로 진행합니다.
    */
-  async create(userId: string, eventId: string): Promise<ClaimDocument> {
+  async create(
+    userId: string,
+    eventId: string,
+    payload?: Record<string, any>
+  ): Promise<ClaimDocument> {
     const event = await this.eventModel.findById(eventId).exec();
     if (!event) throw new NotFoundException(`Event ${eventId} not found`);
 
@@ -30,9 +34,18 @@ export class ClaimService {
       requestedAt: new Date(),
     });
 
-    const allowed = await this.conditionService.canTrigger(userId, event);
+    // userId가 객체로 전달될 가능성을 고려하여 .id 사용
+    const userIdString = typeof userId === 'string' ? userId : (userId as any).id;
+    const allowed = await this.conditionService.canTrigger(userIdString, event, payload);
+
+    // 디버깅용 로그: 조건 검증 결과 및 이후 처리 상태 확인
+    const claimIdStr = String((claim as any)._id);
+    console.log(
+      `[ClaimService] Claim ${claimIdStr} for user=${userIdString} event=${eventId} allowed=${allowed}`,
+    );
+
     if (allowed) {
-      await this.rewardService.processRewards(userId, event);
+      await this.rewardService.processRewards(userId, event, payload);
     } else {
       await this.claimModel.findByIdAndUpdate(claim._id, {
         status: ClaimStatus.REJECTED,

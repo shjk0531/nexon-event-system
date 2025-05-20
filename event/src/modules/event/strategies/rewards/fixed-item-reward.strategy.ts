@@ -20,6 +20,7 @@ export class FixedItemRewardStrategy implements RewardStrategy {
     userId: string,
     event: EventDocument,
     reward: RewardDocument,
+    payload?: Record<string, any>
   ): Promise<void> {
     const { itemId, quantity } = reward.config as {
       itemId: string;

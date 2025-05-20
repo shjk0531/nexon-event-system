@@ -14,6 +14,9 @@ import { InventoryService } from "./services/inventory.service";
 import { eventProviders } from "./event.providers";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Module } from "@nestjs/common";
+import { ReferralCodeService } from "./services/referral-code.service";
+import { JwtModule } from "@nestjs/jwt";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 @Module({
     imports: [
@@ -24,6 +27,14 @@ import { Module } from "@nestjs/common";
         { name: 'Payment', schema: PaymentSchema },
         { name: 'Inventory', schema: InventorySchema },
       ]),
+      JwtModule.registerAsync({
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          secret: configService.get('jwt.secret'),
+          signOptions: { expiresIn: configService.get('jwt.expiresIn') },
+        }),
+        inject: [ConfigService],
+      }),
     ],
     controllers: [EventController, ClaimController],
     providers: [
@@ -33,6 +44,7 @@ import { Module } from "@nestjs/common";
       ClaimService,
       PaymentService,
       InventoryService,
+      ReferralCodeService,
       ...eventProviders,
     ],
     exports: [EventService, ClaimService],

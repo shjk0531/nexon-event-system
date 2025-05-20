@@ -36,7 +36,19 @@ import {
       const upstream = await this.proxyService.forward('event', req, res);
       return upstream.data;
     }
-  
+
+    /** 추천인 아이디 조회 (USER) */
+    @Get('referrerId')
+    @Roles(Role.USER)
+    async referrerId(
+      @Req() req: Request,
+      @Res({ passthrough: true }) res: Response,
+    ) {
+      const upstream = await this.proxyService.forward('event', req, res);
+      return upstream.data;
+    }
+
+
     /** 이벤트 생성 (OPERATOR, ADMIN) */
     @Post()
     @Roles(Role.OPERATOR, Role.ADMIN)
