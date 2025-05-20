@@ -17,7 +17,6 @@ export class FixedItemRewardStrategy implements RewardStrategy {
     event: EventDocument,
     reward: RewardDocument,
   ): Promise<ItemRewardDetailDto> {
-    // 보상 config에 itemId, itemName, quantity 포함
     const { itemId, itemName, quantity } = reward.config as {
       itemId: string;
       itemName: string;

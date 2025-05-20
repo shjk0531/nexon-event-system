@@ -20,7 +20,6 @@ export class PointRewardStrategy implements RewardStrategy {
     userId: string,
     event: EventDocument,
     reward: RewardDocument,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     payload?: Record<string, any>,
   ): Promise<PointRewardDetailDto> {
     const { amount, target = 'user' } = reward.config as {

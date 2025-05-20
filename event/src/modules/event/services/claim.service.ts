@@ -1,8 +1,6 @@
-// src/modules/event/services/claim.service.ts
-
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ClaimDocument } from '../schemas/claim.schema';
 import { EventDocument } from '../schemas/event.schema';
 import { ClaimStatus } from '../constants/claim-status.constant';
@@ -28,16 +26,24 @@ export class ClaimService {
     eventId: string,
     payload?: Record<string, any>,
   ): Promise<ClaimResponseDto> {
-    // 1) 이벤트 존재 확인
+    const existing = await this.claimModel.findOne({
+      userId: new Types.ObjectId(userId),
+      eventId: new Types.ObjectId(eventId),
+      status: ClaimStatus.GRANTED,
+    }).exec();
+    if (existing) {
+      throw new BadRequestException('보상을 이미 수령했습니다.');
+    }
+
+
     const event = await this.eventModel.findById(eventId).exec();
     if (!event) {
       throw new NotFoundException(`Event ${eventId} not found`);
     }
 
-    // 2) PENDING 상태로 클레임 생성
     const created = await this.claimModel.create({
       eventId: event._id,
-      userId,
+      userId: new Types.ObjectId(userId),
       status: ClaimStatus.PENDING,
       requestedAt: new Date(),
     });
@@ -45,17 +51,14 @@ export class ClaimService {
     const claimId = (created._id as any).toString();
     const now = new Date();
 
-    // 3) 조건 검증
     const allowed = await this.conditionService.canTrigger(userId, event, payload);
 
     if (allowed) {
-      // 4a) 보상 처리
       const rewards: RewardDetailDto[] = await this.rewardService.processRewards(
         userId,
         event,
         payload,
       );
-      // 5a) 상태 업데이트
       await this.claimModel
         .findByIdAndUpdate(
           created._id,
@@ -75,7 +78,6 @@ export class ClaimService {
         rewards,
       };
     } else {
-      // 4b) 거부 처리
       await this.claimModel
         .findByIdAndUpdate(
           created._id,

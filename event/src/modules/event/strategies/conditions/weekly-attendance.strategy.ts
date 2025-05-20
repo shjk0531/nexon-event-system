@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ConditionStrategy } from './condition.strategy';
 import { ClaimDocument } from '../../schemas/claim.schema';
 import { EventDocument } from '../../schemas/event.schema';
@@ -26,9 +26,8 @@ export class WeeklyAttendanceStrategy implements ConditionStrategy {
     );
     const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
 
-    // 이번 주 출석(클레임) 횟수 조회
     const count = await this.claimModel.countDocuments({
-      userId,
+      userId: new Types.ObjectId(userId),
       eventId: event._id,
       requestedAt: { $gte: startOfWeek, $lte: endOfWeek },
     }).exec();
@@ -38,6 +37,6 @@ export class WeeklyAttendanceStrategy implements ConditionStrategy {
       return false;
     }
 
-    return count >= minCount;
+    return count >= (minCount - 1);
   }
 }

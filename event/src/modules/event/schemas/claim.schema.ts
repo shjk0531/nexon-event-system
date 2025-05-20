@@ -2,8 +2,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ClaimStatus } from '../constants/claim-status.constant';
 
-export type ClaimDocument = Claim & Document;
+export type ClaimDocument = Claim & Document & {
+  _id: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
+/**
+ * 이벤트 보상 클레임 모델
+ */
 @Schema({ timestamps: true, collection: 'claims' })
 export class Claim {
   @Prop({ type: Types.ObjectId, ref: 'Event', required: true })

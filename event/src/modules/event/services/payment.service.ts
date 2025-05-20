@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { PaymentDocument } from '../schemas/payment.schema';
+import { PaymentDocument, PaymentStatus, PaymentType } from '../schemas/payment.schema';
+import { CreatePaymentDto } from '../dtos/create-payment.dto';
+import { PaymentResponseDto } from '../dtos/payment-response.dto';
 
 /**
  * Payment 관련 비즈니스 로직을 처리
@@ -16,6 +18,42 @@ export class PaymentService {
     @InjectModel('Payment')
     private readonly paymentModel: Model<PaymentDocument>,
   ) {}
+
+  /**
+   * 새로운 결제 생성
+   */
+  async createPayment(userId: string, dto: CreatePaymentDto): Promise<PaymentDocument> {
+    // 캐시백 타입은 직접 생성할 수 없음
+    if (dto.type === PaymentType.CASHBACK) {
+      throw new BadRequestException('캐시백 결제는 직접 생성할 수 없습니다.');
+    }
+
+    const payment = await this.paymentModel.create({
+      userId: new Types.ObjectId(userId),
+      type: dto.type,
+      status: PaymentStatus.PENDING,
+      amount: dto.amount,
+      createdAt: new Date(),
+    });
+
+    return payment;
+  }
+
+  /**
+   * 결제 상태 업데이트
+   */
+  async updatePaymentStatus(
+    paymentId: string,
+    status: PaymentStatus,
+  ): Promise<PaymentDocument> {
+    const payment = await this.paymentModel.findById(paymentId);
+    if (!payment) {
+      throw new BadRequestException('결제 정보를 찾을 수 없습니다.');
+    }
+
+    payment.status = status;
+    return payment.save();
+  }
 
   /**
    * 주어진 기간(start ~ end) 동안 완료된 결제 총합
@@ -90,5 +128,41 @@ export class PaymentService {
       amount,
       createdAt: new Date(),
     });
+  }
+
+  /**
+   * PaymentDocument를 PaymentResponseDto로 변환
+   */
+  private toResponseDto(doc: PaymentDocument): PaymentResponseDto {
+    return {
+      paymentId: doc._id.toString(),
+      userId: doc.userId.toString(),
+      type: doc.type,
+      status: doc.status,
+      amount: doc.amount,
+      createdAt: doc.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * 결제 생성 (응답 DTO 포함)
+   */
+  async createPaymentWithResponse(
+    userId: string,
+    dto: CreatePaymentDto,
+  ): Promise<PaymentResponseDto> {
+    const payment = await this.createPayment(userId, dto);
+    return this.toResponseDto(payment);
+  }
+
+  /**
+   * 결제 상태 업데이트 (응답 DTO 포함)
+   */
+  async updatePaymentStatusWithResponse(
+    paymentId: string,
+    status: PaymentStatus,
+  ): Promise<PaymentResponseDto> {
+    const payment = await this.updatePaymentStatus(paymentId, status);
+    return this.toResponseDto(payment);
   }
 }

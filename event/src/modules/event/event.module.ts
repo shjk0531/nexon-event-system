@@ -17,6 +17,7 @@ import { Module } from "@nestjs/common";
 import { ReferralCodeService } from "./services/referral-code.service";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { PaymentController } from './controllers/payment.controller';
 
 @Module({
     imports: [
@@ -36,7 +37,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
         inject: [ConfigService],
       }),
     ],
-    controllers: [EventController, ClaimController],
+    controllers: [EventController, ClaimController, PaymentController],
     providers: [
       EventService,
       ConditionService,

@@ -8,6 +8,9 @@ export type EventDocument = Event & Document & {
   updatedAt: Date;
 };
 
+/**
+ * 이벤트 모델
+ */
 @Schema({ timestamps: true, collection: 'events' })
 export class Event {
   @Prop({ required: true })

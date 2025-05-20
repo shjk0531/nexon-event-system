@@ -11,7 +11,7 @@ import { JwtConfigModule } from 'modules/jwt/jwt.module';
 import { PassportModule } from '@nestjs/passport';
 import { EventEventController } from 'routes/event/event-event.controller';
 import { EventClaimController } from 'routes/event/event-claim.controller';
-
+import { EventPaymentController } from 'routes/event/event-payment.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,7 +24,13 @@ import { EventClaimController } from 'routes/event/event-claim.controller';
     JwtConfigModule,
   ],
   
-  controllers: [AuthAuthController, AuthUserController, EventEventController, EventClaimController],
+  controllers: [
+    AuthAuthController,
+    AuthUserController,
+    EventEventController,
+    EventClaimController,
+    EventPaymentController,
+  ],
   providers: [
     {
       provide: APP_GUARD,
