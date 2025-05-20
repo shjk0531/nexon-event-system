@@ -344,15 +344,17 @@ docker-compose up -d --build
 -   **Response (200 OK):** (응답 형식은 `event` 서비스의 `eventService.getCalendar` 반환값에 따라 달라집니다.)
     ```json
     // 예시 응답
-    [
-        {
-            "date": "2025-05-01",
-            "events": [
-                { "eventId": "event_id_1", "title": "크리스마스 이벤트" }
-            ]
-        }
+    {
+        "days": [
+            {
+                "date": "2025-05-01",
+                "claimed": false
+            },
+            {
+                "date": "2025-05-02",
+                "claimed": false
+            },
         // ... 기타 날짜별 이벤트 정보
-    ]
     ```
 -   **오류 응답:**
     -   `401 Unauthorized`: 인증되지 않은 사용자
@@ -389,15 +391,16 @@ docker-compose up -d --build
     ```json
     // 예시 CreateEventDto
     {
-    "name": "5월 결제 페이백 이벤트",
-    "type": "PAYBACK",
-    "startAt": "2025-05-01T00:00:00.000Z",
-    "endAt":   "2025-05-31T23:59:59.999Z",
-    "config": {
-      "minAmount": 10000,
-      "maxAmount": 1000000,
-      "cashbackRate": 0.1,
-      "cashbackProbability": 0.5
+     "name": "5월 결제 페이백 이벤트",
+     "type": "PAYBACK",
+     "startAt": "2025-05-01T00:00:00.000Z",
+     "endAt":   "2025-05-31T23:59:59.999Z",
+     "config": {
+       "minAmount": 10000,
+       "maxAmount": 1000000,
+       "cashbackRate": 0.1,
+       "cashbackProbability": 0.5
+      }
     }
     ```
 -   **Response (201 Created):** (생성된 이벤트 정보)
@@ -449,10 +452,8 @@ docker-compose up -d --build
     ```json
     // 예시 UpdateEventDto (부분 업데이트 가능)
     {
-        "title": "[기간 연장] 2025년 5월 가정의 달 특별 출석 이벤트",
-        "description": "뜨거운 성원에 힘입어 이벤트 기간을 연장합니다! (수정일: 2025-05-20)",
-        "endDate": "2025-06-10T23:59:59.000Z",
-        "maxClaims": 12000
+        "name": "[기간 연장] 2025년 5월 가정의 달 특별 출석 이벤트",
+        "endAt": "2025-06-10T23:59:59.000Z",
     }
     ```
 -   **Response (200 OK):** (수정된 이벤트 정보)
@@ -492,11 +493,14 @@ docker-compose up -d --build
     ```json
     // 예시 CreateRewardDto
     {
-        "type": "POINT",
-        "name": "5월 이벤트 특별 참여 포인트",
-        "quantity": 1000,
-        "metadata": { "reason": "2025-05-20 추가 보상 지급" }
+        "type": "CASHBACK",
+        "config": {
+            "rate": 0.1,
+            "maxAmount": 50000,
+            "probability": 0.5
+        }
     }
+
     ```
 -   **Response (201 Created):** (추가된 보상 정보를 포함한 이벤트 정보 또는 성공 메시지)
 -   **오류 응답:**
@@ -521,11 +525,7 @@ docker-compose up -d --build
     ```json
     // 예시 ClaimEventDto
     {
-        "eventId": "may_family_event_2025",
-        "payload": { 
-            "missionId": "daily_login_20250520",
-            "claimedAt": "2025-05-20T10:00:00.000Z"
-        }
+        "eventId": "may_family_event_2025"
     }
     ```
 -   **Response (200 OK / 201 Created):** (`event` 서비스의 `ClaimResponseDto` 참조)
@@ -651,23 +651,20 @@ docker-compose up -d --build
     ```json
     // 예시 CreatePaymentDto
     {
-        "eventId": "special_offer_202505",
-        "amount": 25000,
-        "paymentMethod": "CREDIT_CARD",
-        "metadata": {
-            "productName": "5월 한정 스페셜 패키지",
-            "orderDate": "2025-05-20"
-        }
+        "type": "PURCHASE",
+        "amount": 10000
     }
     ```
 -   **Response (200 OK / 201 Created):** (`event` 서비스의 `PaymentResponseDto` 참조)
     ```json
     // 예시 PaymentResponseDto
     {
-        "paymentId": "payment_id_789",
-        "status": "PENDING", // 또는 "COMPLETED" 등 초기 상태
-        "amount": 25000,
-        "createdAt": "2025-05-20T11:00:00.000Z"
+        "paymentId": "682c03620d6f1444aa1bfded",
+        "userId": "682aee334a96761b2f43493f",
+        "type": "PURCHASE",
+        "status": "PENDING",
+        "amount": 10000,
+        "createdAt": "2025-05-20T04:21:54.829Z"
     }
     ```
 -   **오류 응답:**
