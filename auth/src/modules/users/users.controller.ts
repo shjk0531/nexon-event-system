@@ -12,6 +12,7 @@ import { Role } from 'common/constants/role.enum';
 import { CreateUserResponseDto } from './dto/create-user-dto';
 import { User } from './schemas/user.schema';
 import { CurrentUser } from 'common/decorators/current-user.decorator';
+import { UserCredentialsDto } from './dto/user-credentials.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,11 +25,11 @@ export class UsersController {
    */
   @Post('user')
   createUser(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.USER,
     });
   }
@@ -42,11 +43,11 @@ export class UsersController {
    */
   @Post('operator')
   createOperator(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.OPERATOR,
     });
   }
@@ -60,11 +61,11 @@ export class UsersController {
    */
   @Post('auditor')
   createAuditor(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.AUDITOR,
     });
   }
@@ -78,11 +79,11 @@ export class UsersController {
    */
   @Post('admin')
   createAdmin(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.ADMIN,
     });
   }
@@ -94,7 +95,7 @@ export class UsersController {
    *
    * TODO: 개발 환경에서만 사용
    */
-  @Get('user')
+  @Get('users')
   findAll(): Promise<CreateUserResponseDto[]> {
     return this.usersService.findAll();
   }
@@ -110,6 +111,15 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
+  /**
+   * 본인 정보 조회
+   * @returns body: { email: string; password: string; role: user | operator | auditor | admin }
+   * @requires 본인 정보 조회
+   */
+  @Get('me')
+  findMe(@CurrentUser() user: CurrentUser): Promise<CreateUserResponseDto> {
+    return this.usersService.findById(user.id);
+  }
   /**
    * 사용자 정보 업데이트
    * @param id - 사용자 ID
@@ -131,8 +141,20 @@ export class UsersController {
    * @returns body: { email: string; password: string; role: user | operator | auditor | admin }
    * @requires ADMIN 권한
    */
-  @Delete('user')
+  @Delete('user/:id')
   remove(
+    @Param('id') id: string,
+  ): Promise<CreateUserResponseDto> {
+    return this.usersService.remove(id);
+  }
+
+  /**
+   * 본인 삭제
+   * @returns body: { email: string; password: string; role: user | operator | auditor | admin }
+   * @requires 본인 정보 삭제
+   */
+  @Delete('me')
+  removeMe(
     @CurrentUser() user: CurrentUser,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.remove(user.id);

@@ -1,6 +1,4 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import configuration from 'config/configuration';
@@ -17,8 +15,6 @@ import { UserFromHeaderMiddleware } from 'common/middleware/user-from-header.mid
     MongooseModule.forRoot(process.env.MONGO_EVENT_URI ?? ''),
     EventModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

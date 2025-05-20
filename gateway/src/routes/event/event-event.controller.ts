@@ -27,7 +27,7 @@ import {
 
     /** 달력 조회 (USER) */
     @Get('calendar')
-    @Roles(Role.USER)
+    @Roles(Role.USER, Role.ADMIN)
     async calendar(
       @Query('month') month: string,
       @Req() req: Request,
@@ -37,9 +37,9 @@ import {
       return upstream.data;
     }
 
-    /** 추천인 아이디 조회 (USER) */
+    /** 내 추천인 아이디 조회 */
     @Get('referrerId')
-    @Roles(Role.USER)
+    @Roles(Role.USER, Role.ADMIN)
     async referrerId(
       @Req() req: Request,
       @Res({ passthrough: true }) res: Response,
@@ -49,7 +49,7 @@ import {
     }
 
 
-    /** 이벤트 생성 (OPERATOR, ADMIN) */
+    /** 이벤트 생성 */
     @Post()
     @Roles(Role.OPERATOR, Role.ADMIN)
     async create(
@@ -61,7 +61,7 @@ import {
       return upstream.data;
     }
   
-    /** 이벤트 목록 조회 (OPERATOR, ADMIN) */
+    /** 이벤트 목록 조회 */
     @Get()
     @Roles(Role.OPERATOR, Role.ADMIN)
     async findAll(
@@ -72,7 +72,7 @@ import {
       return upstream.data;
     }
   
-    /** 이벤트 상세 조회 (OPERATOR, ADMIN) */
+    /** 이벤트 상세 조회 */
     @Get(':id')
     @Roles(Role.OPERATOR, Role.ADMIN)
     async findOne(
@@ -84,7 +84,7 @@ import {
       return upstream.data;
     }
   
-    /** 이벤트 수정 (OPERATOR, ADMIN) */
+    /** 이벤트 수정 */
     @Patch(':id')
     @Roles(Role.OPERATOR, Role.ADMIN)
     async update(
@@ -97,7 +97,7 @@ import {
       return upstream.data;
     }
   
-    /** 이벤트 삭제 (OPERATOR, ADMIN) */
+    /** 이벤트 삭제 */
     @Delete(':id')
     @Roles(Role.OPERATOR, Role.ADMIN)
     async remove(
@@ -109,7 +109,7 @@ import {
       return upstream.data;
     }
   
-    /** 이벤트 보상 추가 (OPERATOR, ADMIN) */
+    /** 이벤트 보상 추가 */
     @Post(':id/rewards')
     @Roles(Role.OPERATOR, Role.ADMIN)
     async addReward(
@@ -121,7 +121,6 @@ import {
       const upstream = await this.proxyService.forward('event', req, res);
       return upstream.data;
     }
-  
 
   }
   
