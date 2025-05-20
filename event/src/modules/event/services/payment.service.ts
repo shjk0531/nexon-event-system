@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { PaymentDocument } from '../schemas/payment.schema';
 
 /**
- * Payment 관련 비즈니스 로직을 처리합니다.
+ * Payment 관련 비즈니스 로직을 처리
  * - 기간별 결제 합산 (SpendThresholdStrategy)
  * - 특정 시점 이후 결제 여부 (PaybackStrategy)
  * - 마지막 결제 정보 조회 (CashbackRewardStrategy)
@@ -18,7 +18,7 @@ export class PaymentService {
   ) {}
 
   /**
-   * 주어진 기간(start ~ end) 동안 완료된 결제 총합을 반환합니다.
+   * 주어진 기간(start ~ end) 동안 완료된 결제 총합
    */
   async getTotalSpent(
     userId: string,
@@ -42,7 +42,7 @@ export class PaymentService {
   }
 
   /**
-   * 특정 시점(since) 이후에 완료된 결제가 있는지 여부를 반환합니다.
+   * 특정 시점(since) 이후에 완료된 결제가 있는지 여부
    */
   async hasPaymentSince(
     userId: string,
@@ -57,7 +57,7 @@ export class PaymentService {
   }
 
   /**
-   * 가장 최근에 완료된 결제 정보를 반환합니다.
+   * 가장 최근에 완료된 결제 정보를 반환
    */
   async getLastPayment(
     userId: string,
@@ -77,7 +77,7 @@ export class PaymentService {
   }
 
   /**
-   * 지정된 금액만큼 캐시백 트랜잭션을 생성합니다.
+   * 지정된 금액만큼 캐시백 트랜잭션을 생성
    */
   async issueCashback(
     userId: string,

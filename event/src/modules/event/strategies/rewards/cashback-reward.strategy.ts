@@ -7,7 +7,8 @@ import { RewardDocument } from '../../schemas/reward.schema';
 import { ClaimDocument } from '../../schemas/claim.schema';
 import { PaymentService } from '../../services/payment.service';
 import { ClaimStatus } from '../../constants/claim-status.constant';
-
+import { CashbackRewardDetailDto } from '../../dtos/reward-detail.dto';
+import { RewardType } from '../../constants/reward-type.constant';
 /**
  * 확률 기반 캐시백 지급 전략
  */
@@ -23,7 +24,7 @@ export class CashbackRewardStrategy implements RewardStrategy {
     userId: string,
     event: EventDocument,
     reward: RewardDocument,
-  ): Promise<void> {
+  ): Promise<CashbackRewardDetailDto> {
     const { rate, maxAmount } = reward.config as {
       rate: number;
       maxAmount: number;
@@ -34,20 +35,20 @@ export class CashbackRewardStrategy implements RewardStrategy {
       throw new Error('No payment found for cashback');
     }
 
-    const cashback = Math.min(lastPayment.amount * rate, maxAmount);
-
-    await this.paymentService.issueCashback(userId, cashback);
-
-    await this.claimModel
-      .findOneAndUpdate(
-        { userId, eventId: event._id },
-        {
-          status: ClaimStatus.GRANTED,
-          processedAt: new Date(),
-          detail: { cashbackAmount: cashback },
-        },
-        { new: true },
-      )
-      .exec();
+     // 마지막 결제 금액 조회
+     const last = await this.paymentService.getLastPayment(userId);
+     const amountPaid = last?.amount ?? 0;
+ 
+     // 캐시백 계산
+     const cashback = Math.min(amountPaid * rate, maxAmount);
+ 
+     // 실제 캐시백 트랜잭션 생성
+     await this.paymentService.issueCashback(userId, cashback);
+ 
+     return {
+       type: RewardType.CASHBACK,
+       rate,
+       amount: cashback,
+     };
   }
 }

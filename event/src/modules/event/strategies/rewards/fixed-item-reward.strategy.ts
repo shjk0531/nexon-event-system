@@ -1,18 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { RewardStrategy } from './reward.strategy';
 import { EventDocument } from '../../schemas/event.schema';
 import { RewardDocument } from '../../schemas/reward.schema';
-import { ClaimDocument } from '../../schemas/claim.schema';
 import { InventoryService } from '../../services/inventory.service';
-import { ClaimStatus } from '../../constants/claim-status.constant';
+import { ItemRewardDetailDto } from '../../dtos/reward-detail.dto';
+import { RewardType } from '../../constants/reward-type.constant';
 
 @Injectable()
 export class FixedItemRewardStrategy implements RewardStrategy {
   constructor(
-    @InjectModel('Claim')
-    private readonly claimModel: Model<ClaimDocument>,
     private readonly inventoryService: InventoryService,
   ) {}
 
@@ -20,27 +16,23 @@ export class FixedItemRewardStrategy implements RewardStrategy {
     userId: string,
     event: EventDocument,
     reward: RewardDocument,
-    payload?: Record<string, any>
-  ): Promise<void> {
-    const { itemId, quantity } = reward.config as {
+  ): Promise<ItemRewardDetailDto> {
+    // 보상 config에 itemId, itemName, quantity 포함
+    const { itemId, itemName, quantity } = reward.config as {
       itemId: string;
+      itemName: string;
       quantity: number;
     };
 
-    // 아이템 지급
+    // 실제 아이템 지급
     await this.inventoryService.addItem(userId, itemId, quantity);
 
-    // 클레임 상태 업데이트
-    await this.claimModel
-      .findOneAndUpdate(
-        { userId, eventId: event._id },
-        {
-          status: ClaimStatus.GRANTED,
-          processedAt: new Date(),
-          detail: { itemId, quantity },
-        },
-        { new: true },
-      )
-      .exec();
+    // 반환할 보상 상세 DTO
+    return {
+      type: RewardType.ITEM,
+      itemId,
+      itemName,
+      quantity,
+    };
   }
 }

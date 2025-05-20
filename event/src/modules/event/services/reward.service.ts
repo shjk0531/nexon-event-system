@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { RewardDocument } from '../schemas/reward.schema';
 import { EventDocument } from '../schemas/event.schema';
 import { RewardStrategy } from '../strategies/rewards/reward.strategy';
+import { RewardDetailDto } from '../dtos/reward-detail.dto';
 
 @Injectable()
 export class RewardService {
@@ -23,14 +24,15 @@ export class RewardService {
     userIdInput: string | { id: string },
     event: EventDocument,
     payload?: Record<string, any>
-  ): Promise<void> {
+  ): Promise<RewardDetailDto[]> {
     const userId = typeof userIdInput === 'string' ? userIdInput : userIdInput.id;
     this.logger.log(`Processing rewards for userId (string): ${userId}, eventId: ${event._id.toString()}`);
 
     const rewards = await this.rewardModel.find({ eventId: event._id }).exec();
+    const details: RewardDetailDto[] = [];
     if (!rewards.length) {
       this.logger.log(`No rewards found for eventId: ${event._id.toString()}`);
-      return;
+      return details;
     }
 
     for (const reward of rewards) {
@@ -50,7 +52,8 @@ export class RewardService {
       }
 
       try {
-        await strategy.process(userId, event, reward, payload);
+        const detail = await strategy.process(userId, event, reward, payload);
+        details.push(detail);
       } catch (error) {
         this.logger.error(
           `Error processing reward type ${reward.type} for userId ${userId}, eventId: ${event._id.toString()}, rewardId: ${(reward._id as any).toString()}: ${error.message}`,
@@ -58,5 +61,7 @@ export class RewardService {
         );
       }
     }
+
+    return details;
   }
 }

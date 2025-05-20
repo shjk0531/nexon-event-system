@@ -1,3 +1,5 @@
+// src/modules/event/services/claim.service.ts
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -6,6 +8,8 @@ import { EventDocument } from '../schemas/event.schema';
 import { ClaimStatus } from '../constants/claim-status.constant';
 import { ConditionService } from './condition.service';
 import { RewardService } from './reward.service';
+import { ClaimResponseDto } from '../dtos/claim-response.dto';
+import { RewardDetailDto } from '../dtos/reward-detail.dto';
 
 @Injectable()
 export class ClaimService {
@@ -17,61 +21,121 @@ export class ClaimService {
   ) {}
 
   /**
-   * 사용자의 보상 요청을 생성하고, 조건검증 → 보상처리(또는 거부) 순으로 진행합니다.
+   * 사용자의 보상 요청 생성 및 처리
    */
   async create(
     userId: string,
     eventId: string,
-    payload?: Record<string, any>
-  ): Promise<ClaimDocument> {
+    payload?: Record<string, any>,
+  ): Promise<ClaimResponseDto> {
+    // 1) 이벤트 존재 확인
     const event = await this.eventModel.findById(eventId).exec();
-    if (!event) throw new NotFoundException(`Event ${eventId} not found`);
+    if (!event) {
+      throw new NotFoundException(`Event ${eventId} not found`);
+    }
 
-    const claim = await this.claimModel.create({
+    // 2) PENDING 상태로 클레임 생성
+    const created = await this.claimModel.create({
       eventId: event._id,
       userId,
       status: ClaimStatus.PENDING,
       requestedAt: new Date(),
     });
 
-    // userId가 객체로 전달될 가능성을 고려하여 .id 사용
-    const userIdString = typeof userId === 'string' ? userId : (userId as any).id;
-    const allowed = await this.conditionService.canTrigger(userIdString, event, payload);
+    const claimId = (created._id as any).toString();
+    const now = new Date();
 
-    // 디버깅용 로그: 조건 검증 결과 및 이후 처리 상태 확인
-    const claimIdStr = String((claim as any)._id);
-    console.log(
-      `[ClaimService] Claim ${claimIdStr} for user=${userIdString} event=${eventId} allowed=${allowed}`,
-    );
+    // 3) 조건 검증
+    const allowed = await this.conditionService.canTrigger(userId, event, payload);
 
     if (allowed) {
-      await this.rewardService.processRewards(userId, event, payload);
-    } else {
-      await this.claimModel.findByIdAndUpdate(claim._id, {
-        status: ClaimStatus.REJECTED,
-        processedAt: new Date(),
-      });
-    }
+      // 4a) 보상 처리
+      const rewards: RewardDetailDto[] = await this.rewardService.processRewards(
+        userId,
+        event,
+        payload,
+      );
+      // 5a) 상태 업데이트
+      await this.claimModel
+        .findByIdAndUpdate(
+          created._id,
+          {
+            status: ClaimStatus.GRANTED,
+            processedAt: now,
+            detail: rewards,
+          },
+          { new: true },
+        )
+        .exec();
 
-    return this.claimModel.findById(claim._id).exec() as Promise<ClaimDocument>;
+      return {
+        claimId,
+        status: ClaimStatus.GRANTED,
+        processedAt: now.toISOString(),
+        rewards,
+      };
+    } else {
+      // 4b) 거부 처리
+      await this.claimModel
+        .findByIdAndUpdate(
+          created._id,
+          {
+            status: ClaimStatus.REJECTED,
+            processedAt: now,
+          },
+          { new: true },
+        )
+        .exec();
+
+      return {
+        claimId,
+        status: ClaimStatus.REJECTED,
+        processedAt: now.toISOString(),
+      };
+    }
   }
 
-  /** 특정 유저·이벤트 조합의 클레임 조회 */
+  /**
+   * 특정 유저의 특정 이벤트 보상 요청 조회
+   */
   async findOneByUserAndEvent(
     userId: string,
     eventId: string,
-  ): Promise<ClaimDocument> {
-    return this.claimModel.findOne({ userId, eventId }).exec() as Promise<ClaimDocument>;
+  ): Promise<ClaimResponseDto> {
+    const claim = await this.claimModel.findOne({ userId, eventId }).exec();
+    if (!claim) {
+      throw new NotFoundException(`Claim for event ${eventId} not found`);
+    }
+    return this.toResponseDto(claim);
   }
 
-  /** 운영자/감사자용: 전체 클레임 조회 (필터링 가능) */
+  /**
+   * 운영자/감사자: 전체 클레임 조회 (필터링 가능)
+   */
   async findAll(filter: {
     eventId?: string;
     status?: ClaimStatus[];
-  }): Promise<ClaimDocument[]> {
+  }): Promise<ClaimResponseDto[]> {
     const query: any = {};
     if (filter.eventId) query.eventId = filter.eventId;
     if (filter.status) query.status = { $in: filter.status };
-    return this.claimModel.find(query).exec();
+
+    const docs = await this.claimModel.find(query).exec();
+    return docs.map((c) => this.toResponseDto(c));
+  }
+
+  /**
+   * ClaimDocument -> ClaimResponseDto 변환 헬퍼
+   */
+  private toResponseDto(doc: ClaimDocument): ClaimResponseDto {
+    const dto: ClaimResponseDto = {
+      claimId: (doc._id as any).toString(),
+      status: doc.status,
+      processedAt: doc.processedAt?.toISOString(),
+    };
+    if (doc.status === ClaimStatus.GRANTED && Array.isArray(doc.detail)) {
+      dto.rewards = doc.detail as RewardDetailDto[];
+    }
+    return dto;
   }
 }
