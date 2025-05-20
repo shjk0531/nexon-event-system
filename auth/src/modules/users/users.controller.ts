@@ -12,6 +12,7 @@ import { Role } from 'common/constants/role.enum';
 import { CreateUserResponseDto } from './dto/create-user-dto';
 import { User } from './schemas/user.schema';
 import { CurrentUser } from 'common/decorators/current-user.decorator';
+import { UserCredentialsDto } from './dto/user-credentials.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,11 +25,11 @@ export class UsersController {
    */
   @Post('user')
   createUser(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.USER,
     });
   }
@@ -42,11 +43,11 @@ export class UsersController {
    */
   @Post('operator')
   createOperator(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.OPERATOR,
     });
   }
@@ -60,11 +61,11 @@ export class UsersController {
    */
   @Post('auditor')
   createAuditor(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.AUDITOR,
     });
   }
@@ -78,11 +79,11 @@ export class UsersController {
    */
   @Post('admin')
   createAdmin(
-    @Body() createUserDto: { email: string; password: string },
+    @Body() userCredentialsDto: UserCredentialsDto,
   ): Promise<CreateUserResponseDto> {
     return this.usersService.create({
-      email: createUserDto.email,
-      password: createUserDto.password,
+      email: userCredentialsDto.email,
+      password: userCredentialsDto.password,
       role: Role.ADMIN,
     });
   }
