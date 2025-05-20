@@ -8,6 +8,7 @@ import { ConditionService } from './condition.service';
 import { RewardService } from './reward.service';
 import { ClaimResponseDto } from '../dtos/claim-response.dto';
 import { RewardDetailDto } from '../dtos/reward-detail.dto';
+import { FindClaimUserDto } from '../dtos/find-claim-user.dto';
 
 @Injectable()
 export class ClaimService {
@@ -106,9 +107,27 @@ export class ClaimService {
   ): Promise<ClaimResponseDto> {
     const claim = await this.claimModel.findOne({ userId, eventId }).exec();
     if (!claim) {
-      throw new NotFoundException(`Claim for event ${eventId} not found`);
+      throw new NotFoundException(`Claim ${userId} ${eventId} not found`);
     }
     return this.toResponseDto(claim);
+  }
+
+
+  /**
+   * 특정 유저의 특정 이벤트 보상 요청 목록 조회
+   */
+  async findAllByUserId(
+    findClaimUserDto: FindClaimUserDto,
+  ): Promise<ClaimResponseDto[]> {
+    const query: any = {
+      userId: new Types.ObjectId(findClaimUserDto.userId),
+    };
+    if (findClaimUserDto.eventId) {
+      query.eventId = new Types.ObjectId(findClaimUserDto.eventId);
+    }
+
+    const docs = await this.claimModel.find(query).exec();
+    return docs.map((doc) => this.toResponseDto(doc));
   }
 
   /**

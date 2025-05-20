@@ -25,7 +25,7 @@ export class EventClaimController {
 
   /** 보상 요청 생성 (USER) */
   @Post()
-  @Roles(Role.USER)
+  @Roles(Role.USER, Role.ADMIN)
   async create(
     @Body() body: unknown,
     @Req() req: Request,
@@ -35,9 +35,24 @@ export class EventClaimController {
     return upstream.data;
   }
 
-  /** 내 보상 요청 조회 (USER) */
-  @Get(':eventId')
-  @Roles(Role.USER)
+  /**
+   * 특정 유저의 특정 이벤트 보상 요청 조회 
+   */
+  @Get('admin')
+  @Roles(Role.AUDITOR, Role.ADMIN)
+  async findAllClaimsByUserId(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const upstream = await this.proxyService.forward('event', req, res);
+    return upstream.data;
+  }
+
+  /** 
+   * 내 보상 요청 조회 
+   */
+  @Get('/:eventId')
+  @Roles(Role.USER, Role.ADMIN)
   async findOne(
     @Param('eventId') eventId: string,
     @Req() req: Request,
@@ -49,7 +64,7 @@ export class EventClaimController {
 
   /** 전체 보상 요청 조회 (OPERATOR, AUDITOR, ADMIN) */
   @Get()
-  @Roles(Role.OPERATOR, Role.AUDITOR, Role.ADMIN)
+  @Roles(Role.AUDITOR, Role.ADMIN)
   async findAll(
     @Query() query: unknown,
     @Req() req: Request,
