@@ -22,8 +22,8 @@ export class ProxyService {
 
   /**
    * @param service 'auth' | 'event'
-   * @param req Express Request (cookie-parser 로 req.cookies 가 채워져 있어야 함)
-   * @param res Express Response (upstream의 Set-Cookie 를 여기에 복사)
+   * @param req
+   * @param res
    */
   async forward(
     service: 'auth' | 'event',
@@ -34,7 +34,9 @@ export class ProxyService {
     const base = this.config.get<string>(
       service === 'auth' ? 'services.auth' : 'services.event',
     );
-    const path = req.url.replace(/^\/api\/(auth|event)/, '');
+    const raw = (req.path ?? req.url).toString();
+    const cleanPath = raw.split('?')[0];
+    const path = cleanPath.replace(/^\/api\/(auth|event)/, '');
     const url  = base + path;
 
     const { host, 'content-length': _cl, ...forwardHeaders } = req.headers as any;

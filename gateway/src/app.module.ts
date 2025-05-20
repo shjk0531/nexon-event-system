@@ -9,7 +9,9 @@ import { AuthAuthController } from 'routes/auth/auth-auth.controller';
 import { AuthUserController } from 'routes/auth/auth-user.controller';
 import { JwtConfigModule } from 'modules/jwt/jwt.module';
 import { PassportModule } from '@nestjs/passport';
-import { EventController } from 'routes/event/event.controller';
+import { EventEventController } from 'routes/event/event-event.controller';
+import { EventClaimController } from 'routes/event/event-claim.controller';
+import { EventPaymentController } from 'routes/event/event-payment.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,7 +24,13 @@ import { EventController } from 'routes/event/event.controller';
     JwtConfigModule,
   ],
   
-  controllers: [AuthAuthController, AuthUserController, EventController],
+  controllers: [
+    AuthAuthController,
+    AuthUserController,
+    EventEventController,
+    EventClaimController,
+    EventPaymentController,
+  ],
   providers: [
     {
       provide: APP_GUARD,
